@@ -189,8 +189,7 @@ function rowClass(status) {
 
 function mapLink(lon, lat) {
     if (lon == null || lat == null) return "#";
-    console.log("Map link coords:", lon, lat); // Add this
-    return `https://carbonmt.maps.arcgis.com/apps/mapviewer/index.html?webmap=${webmapId}&center=${lon},${lat}&zoom=13`;
+    return `https://carbonmt.maps.arcgis.com/apps/mapviewer/index.html?webmap=${webmapId}&center=${lon},${lat}`;
 }
 
 function updateTimestamp() {
