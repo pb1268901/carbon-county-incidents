@@ -1,170 +1,231 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Carbon County Active Incidents</title>
+<meta charset="UTF-8" />
+<title>Carbon County Incident List</title>
 
 <style>
 body {
+    font-family: Arial, Helvetica, sans-serif;
     margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f8f9fa;
-}
-
-.container {
-    padding: 16px;
+    padding: 10px;
+    background: #ffffff;
+    color: #333;
 }
 
 h2 {
-    margin-top: 0;
+    margin: 0 0 4px 0;
+    font-size: 1.4em;
 }
 
-.last-update {
-    font-size: 0.85em;
+.subtitle {
+    font-size: 0.9em;
     color: #666;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 .table-wrapper {
-    max-height: 550px;
+    max-height: 600px;
     overflow-y: auto;
-    background: white;
+    border: 1px solid #ddd;
     border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
+/* Table */
 table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 900px;
+    font-size: 0.85em;
 }
 
 thead {
-    background: #2c3e50;
-    color: white;
     position: sticky;
     top: 0;
+    background: #f5f5f5;
     z-index: 1;
 }
 
 th, td {
-    padding: 10px 12px;
-    border-bottom: 1px solid #e0e0e0;
-    font-size: 0.9em;
+    padding: 8px 10px;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+}
+
+th {
     text-align: left;
+    font-weight: 600;
+    color: #444;
 }
 
-tbody tr:hover {
-    background: #f2f2f2;
-}
-
+/* Status styling */
 .status {
-    padding: 3px 10px;
-    border-radius: 12px;
-    font-size: 0.8em;
-    font-weight: bold;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 0.75em;
+    display: inline-block;
 }
 
-.active { background: #fdecea; color: #c0392b; }
-.contained { background: #fff3cd; color: #856404; }
-.closed { background: #d4edda; color: #155724; }
-
-.loading {
-    padding: 40px;
-    text-align: center;
-    color: #666;
+.status-active {
+    background: #fcebea;
+    color: #b71c1c;
 }
 
+.status-contained {
+    background: #fff8e1;
+    color: #8d6e00;
+}
+
+.status-closed {
+    background: #e8f5e9;
+    color: #1b5e20;
+}
+
+/* Row emphasis */
+tr.active-row {
+    background: #fff6f6;
+}
+
+tr.closed-row {
+    background: #fafafa;
+}
+
+/* Links */
+a.map-link {
+    color: #1a73e8;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+a.map-link:hover {
+    text-decoration: underline;
+}
+
+/* Mobile tweaks for Hub narrow columns */
+@media (max-width: 700px) {
+    th:nth-child(4),
+    td:nth-child(4),
+    th:nth-child(6),
+    td:nth-child(6),
+    th:nth-child(7),
+    td:nth-child(7) {
+        display: none;
+    }
+
+    table {
+        font-size: 0.8em;
+    }
+}
 </style>
 </head>
 
 <body>
-<div class="container">
-    <h2>Active Incidents</h2>
-    <div class="last-update" id="lastUpdate">Loading…</div>
 
-    <div class="table-wrapper">
-        <div class="loading" id="loading">Loading incident data…</div>
-        <table id="incidentTable" style="display:none;">
-            <thead>
-                <tr>
-                    <th>Incident Name</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Start Date</th>
-                    <th>Location</th>
-                    <th>Size (Acres)</th>
-                    <th>Contact</th>
-                    <th>Last Updated</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
+<h2>Incident List</h2>
+<div class="subtitle">Ongoing and past incidents</div>
+
+<div class="table-wrapper">
+<table id="incidentTable">
+    <thead>
+        <tr>
+            <th>Incident</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Start Date</th>
+            <th>Location</th>
+            <th>Acres</th>
+            <th>Contact</th>
+            <th>Last Updated</th>
+            <th>Map</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td colspan="9">Loading incident data…</td>
+        </tr>
+    </tbody>
+</table>
 </div>
 
 <script>
-const LAYER_URL =
-  'https://services1.arcgis.com/lo6DwqkHoBfbpsNX/arcgis/rest/services/Carbon_County_Incidents_(Public)/FeatureServer/0/query';
+const serviceUrl =
+  "https://services1.arcgis.com/lo6DwqkHoBfbpsNX/arcgis/rest/services/Carbon_County_Incidents_(Public)/FeatureServer/0/query";
+
+function formatDate(value) {
+    if (!value) return "N/A";
+    const d = new Date(value);
+    return isNaN(d) ? "N/A" : d.toLocaleDateString();
+}
 
 function statusClass(status) {
-    if (!status) return '';
-    status = status.toLowerCase();
-    if (status.includes('active')) return 'active';
-    if (status.includes('contained')) return 'contained';
-    if (status.includes('closed')) return 'closed';
-    return '';
+    if (!status) return "";
+    const s = status.toLowerCase();
+    if (s.includes("active")) return "status-active";
+    if (s.includes("contain")) return "status-contained";
+    if (s.includes("close")) return "status-closed";
+    return "";
 }
 
-function formatDate(ms) {
-    if (!ms) return 'N/A';
-    return new Date(ms).toLocaleDateString();
+function rowClass(status) {
+    if (!status) return "";
+    const s = status.toLowerCase();
+    if (s.includes("active")) return "active-row";
+    if (s.includes("close")) return "closed-row";
+    return "";
 }
 
-async function loadIncidents() {
-    const params = new URLSearchParams({
-        where: '1=1',
-        outFields: 'Incident_Name,Incident_Type,Status,Start_Date,Location_Description,Size_Acres,Contact_Info,Last_Updated',
-        orderByFields: 'Start_Date DESC',
-        returnGeometry: 'false',
-        f: 'json'
-    });
+function mapLink(geometry) {
+    if (!geometry) return "";
+    const lat = geometry.y;
+    const lon = geometry.x;
+    return `https://www.arcgis.com/apps/mapviewer/index.html?center=${lon},${lat}&zoom=13`;
+}
 
-    const res = await fetch(`${LAYER_URL}?${params}`);
-    const data = await res.json();
+fetch(serviceUrl + "?" + new URLSearchParams({
+    where: "1=1",
+    outFields: "*",
+    returnGeometry: true,
+    f: "json"
+}))
+.then(r => r.json())
+.then(data => {
+    const tbody = document.querySelector("#incidentTable tbody");
+    tbody.innerHTML = "";
 
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('lastUpdate').innerText =
-        'Last updated: ' + new Date().toLocaleString();
-
-    const table = document.getElementById('incidentTable');
-    const tbody = table.querySelector('tbody');
-    tbody.innerHTML = '';
+    if (!data.features || data.features.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='9'>No incidents found.</td></tr>";
+        return;
+    }
 
     data.features.forEach(f => {
         const a = f.attributes;
-        const tr = document.createElement('tr');
+        const g = f.geometry;
+
+        const tr = document.createElement("tr");
+        tr.className = rowClass(a.Status);
 
         tr.innerHTML = `
-            <td><strong>${a.Incident_Name || 'Unnamed'}</strong></td>
-            <td>${a.Incident_Type || 'N/A'}</td>
-            <td><span class="status ${statusClass(a.Status)}">${a.Status || 'Unknown'}</span></td>
+            <td><strong>${a.Incident_Name || "Unnamed Incident"}</strong></td>
+            <td>${a.Incident_Type || "N/A"}</td>
+            <td><span class="status ${statusClass(a.Status)}">${a.Status || "N/A"}</span></td>
             <td>${formatDate(a.Start_Date)}</td>
-            <td>${a.Location_Description || 'N/A'}</td>
-            <td>${a.Size_Acres ? a.Size_Acres.toLocaleString() : 'N/A'}</td>
-            <td>${a.Contact_Info || 'N/A'}</td>
+            <td>${a.Location_Description || "N/A"}</td>
+            <td>${a.Size_Acres ? a.Size_Acres.toLocaleString() : "N/A"}</td>
+            <td>${a.Contact_Info || "N/A"}</td>
             <td>${formatDate(a.Last_Updated)}</td>
+            <td>${g ? `<a class="map-link" href="${mapLink(g)}" target="_blank">View</a>` : "—"}</td>
         `;
+
         tbody.appendChild(tr);
     });
-
-    table.style.display = 'table';
-}
-
-loadIncidents();
-setInterval(loadIncidents, 300000); // refresh every 5 minutes
+})
+.catch(err => {
+    console.error(err);
+    document.querySelector("#incidentTable tbody").innerHTML =
+        "<tr><td colspan='9'>Error loading incident data.</td></tr>";
+});
 </script>
+
 </body>
 </html>
+
