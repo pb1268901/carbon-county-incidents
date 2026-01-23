@@ -9,26 +9,34 @@ body {
     font-family: Arial, Helvetica, sans-serif;
     margin: 0;
     padding: 10px;
-    background: #ffffff;
-    color: #333;
+    background: #f5f5f5;
+    color: #ffffff;
 }
 
 h2 {
     margin: 0 0 4px 0;
-    font-size: 1.4em;
+    font-size: 2em; /* bigger title */
+    font-weight: bold;
 }
 
 .subtitle {
-    font-size: 0.9em;
-    color: #666;
+    font-size: 0.95em;
+    color: #cfd8dc;
+    margin-bottom: 8px;
+}
+
+.last-update {
+    font-size: 0.85em;
+    color: #b0bec5;
     margin-bottom: 12px;
 }
 
 .table-wrapper {
     max-height: 600px;
     overflow-y: auto;
-    border: 1px solid #ddd;
     border-radius: 6px;
+    background-color: #00474f; /* dark teal background */
+    padding: 6px;
 }
 
 /* Table */
@@ -36,25 +44,26 @@ table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.85em;
+    color: #ffffff;
 }
 
 thead {
     position: sticky;
     top: 0;
-    background: #f5f5f5;
+    background: #00666c; /* slightly lighter dark teal for header */
     z-index: 1;
 }
 
 th, td {
     padding: 8px 10px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #007a80; /* subtle separation */
     vertical-align: top;
+    color: #ffffff;
 }
 
 th {
     text-align: left;
     font-weight: 600;
-    color: #444;
 }
 
 /* Status styling */
@@ -67,32 +76,32 @@ th {
 }
 
 .status-active {
-    background: #fcebea;
-    color: #b71c1c;
+    background: #e53935;
+    color: #fff;
 }
 
 .status-contained {
-    background: #fff8e1;
-    color: #8d6e00;
+    background: #fbc02d;
+    color: #000;
 }
 
 .status-closed {
-    background: #e8f5e9;
-    color: #1b5e20;
+    background: #43a047;
+    color: #fff;
 }
 
 /* Row emphasis */
 tr.active-row {
-    background: #fff6f6;
+    background: #004f58;
 }
 
 tr.closed-row {
-    background: #fafafa;
+    background: #003f45;
 }
 
 /* Links */
 a.map-link {
-    color: #1a73e8;
+    color: #ffcc00;
     text-decoration: none;
     font-weight: 500;
 }
@@ -101,7 +110,7 @@ a.map-link:hover {
     text-decoration: underline;
 }
 
-/* Mobile tweaks for Hub narrow columns */
+/* Mobile tweaks */
 @media (max-width: 700px) {
     th:nth-child(4),
     td:nth-child(4),
@@ -123,6 +132,7 @@ a.map-link:hover {
 
 <h2>Incident List</h2>
 <div class="subtitle">Ongoing and past incidents</div>
+<div class="last-update" id="lastUpdate">Last updated: Loading…</div>
 
 <div class="table-wrapper">
 <table id="incidentTable">
@@ -151,6 +161,8 @@ a.map-link:hover {
 const serviceUrl =
   "https://services1.arcgis.com/lo6DwqkHoBfbpsNX/arcgis/rest/services/Carbon_County_Incidents_(Public)/FeatureServer/0/query";
 
+const webmapId = "c7ba04d590f440488f5b77f1d36ba4ad";
+
 function formatDate(value) {
     if (!value) return "N/A";
     const d = new Date(value);
@@ -174,56 +186,76 @@ function rowClass(status) {
     return "";
 }
 
-function mapLink(geometry) {
-    if (!geometry) return "";
-    const lat = geometry.y;
-    const lon = geometry.x;
-    return `https://www.arcgis.com/apps/mapviewer/index.html?center=${lon},${lat}&zoom=13`;
+function mapLink(lon, lat) {
+    if (lon == null || lat == null) return "#";
+    return `https://carbonmt.maps.arcgis.com/apps/mapviewer/index.html?layers=${webmapId}&center=${lon},${lat}&zoom=13`;
 }
 
-fetch(serviceUrl + "?" + new URLSearchParams({
-    where: "1=1",
-    outFields: "*",
-    returnGeometry: true,
-    f: "json"
-}))
-.then(r => r.json())
-.then(data => {
-    const tbody = document.querySelector("#incidentTable tbody");
-    tbody.innerHTML = "";
+function updateTimestamp() {
+    document.getElementById("lastUpdate").innerText =
+        "Last updated: " + new Date().toLocaleString();
+}
 
-    if (!data.features || data.features.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='9'>No incidents found.</td></tr>";
-        return;
+async function loadIncidents() {
+    try {
+        const params = new URLSearchParams({
+            where: "1=1",
+            outFields: "*",
+            returnGeometry: true,
+            f: "json"
+        });
+
+        const res = await fetch(`${serviceUrl}?${params}`);
+        const data = await res.json();
+
+        const tbody = document.querySelector("#incidentTable tbody");
+        tbody.innerHTML = "";
+
+        if (!data.features || data.features.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='9'>No incidents found.</td></tr>";
+            updateTimestamp();
+            return;
+        }
+
+        data.features.forEach(f => {
+            const a = f.attributes;
+            const g = f.geometry;
+
+            const tr = document.createElement("tr");
+            tr.className = rowClass(a.Status);
+
+            const lon = g ? g.x : null;
+            const lat = g ? g.y : null;
+
+            tr.innerHTML = `
+                <td><strong>${a.Incident_Name || "Unnamed"}</strong></td>
+                <td>${a.Incident_Type || "N/A"}</td>
+                <td><span class="status ${statusClass(a.Status)}">${a.Status || "N/A"}</span></td>
+                <td>${formatDate(a.Start_Date)}</td>
+                <td>${a.Location_Description || "N/A"}</td>
+                <td>${a.Size_Acres ? a.Size_Acres.toLocaleString() : "N/A"}</td>
+                <td>${a.Contact_Info || "N/A"}</td>
+                <td>${formatDate(a.Last_Updated)}</td>
+                <td>${lon && lat ? `<a class="map-link" href="${mapLink(lon,lat)}" target="_blank">View</a>` : "—"}</td>
+            `;
+
+            tbody.appendChild(tr);
+        });
+
+        updateTimestamp();
+
+    } catch (err) {
+        console.error(err);
+        document.querySelector("#incidentTable tbody").innerHTML =
+            "<tr><td colspan='9'>Error loading incident data.</td></tr>";
+        updateTimestamp();
     }
+}
 
-    data.features.forEach(f => {
-        const a = f.attributes;
-        const g = f.geometry;
-
-        const tr = document.createElement("tr");
-        tr.className = rowClass(a.Status);
-
-        tr.innerHTML = `
-            <td><strong>${a.Incident_Name || "Unnamed Incident"}</strong></td>
-            <td>${a.Incident_Type || "N/A"}</td>
-            <td><span class="status ${statusClass(a.Status)}">${a.Status || "N/A"}</span></td>
-            <td>${formatDate(a.Start_Date)}</td>
-            <td>${a.Location_Description || "N/A"}</td>
-            <td>${a.Size_Acres ? a.Size_Acres.toLocaleString() : "N/A"}</td>
-            <td>${a.Contact_Info || "N/A"}</td>
-            <td>${formatDate(a.Last_Updated)}</td>
-            <td>${g ? `<a class="map-link" href="${mapLink(g)}" target="_blank">View</a>` : "—"}</td>
-        `;
-
-        tbody.appendChild(tr);
-    });
-})
-.catch(err => {
-    console.error(err);
-    document.querySelector("#incidentTable tbody").innerHTML =
-        "<tr><td colspan='9'>Error loading incident data.</td></tr>";
-});
+// initial load
+loadIncidents();
+// refresh every 5 minutes
+setInterval(loadIncidents, 300000);
 </script>
 
 </body>
