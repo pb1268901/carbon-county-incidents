@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Carbon County Active Incidents</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f8f9fa;
+}
+
+.container {
+    padding: 16px;
+}
+
+h2 {
+    margin-top: 0;
+}
+
+.last-update {
+    font-size: 0.85em;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.table-wrapper {
+    max-height: 550px;
+    overflow-y: auto;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+}
+
+thead {
+    background: #2c3e50;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+th, td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 0.9em;
+    text-align: left;
+}
+
+tbody tr:hover {
+    background: #f2f2f2;
+}
+
+.status {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.active { background: #fdecea; color: #c0392b; }
+.contained { background: #fff3cd; color: #856404; }
+.closed { background: #d4edda; color: #155724; }
+
+.loading {
+    padding: 40px;
+    text-align: center;
+    color: #666;
+}
+
+</style>
+</head>
+
+<body>
+<div class="container">
+    <h2>Active Incidents</h2>
+    <div class="last-update" id="lastUpdate">Loading…</div>
+
+    <div class="table-wrapper">
+        <div class="loading" id="loading">Loading incident data…</div>
+        <table id="incidentTable" style="display:none;">
+            <thead>
+                <tr>
+                    <th>Incident Name</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Start Date</th>
+                    <th>Location</th>
+                    <th>Size (Acres)</th>
+                    <th>Contact</th>
+                    <th>Last Updated</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+const LAYER_URL =
+  'https://services1.arcgis.com/lo6DwqkHoBfbpsNX/arcgis/rest/services/Carbon_County_Incidents_(Public)/FeatureServer/0/query';
+
+function statusClass(status) {
+    if (!status) return '';
+    status = status.toLowerCase();
+    if (status.includes('active')) return 'active';
+    if (status.includes('contained')) return 'contained';
+    if (status.includes('closed')) return 'closed';
+    return '';
+}
+
+function formatDate(ms) {
+    if (!ms) return 'N/A';
+    return new Date(ms).toLocaleDateString();
+}
+
+async function loadIncidents() {
+    const params = new URLSearchParams({
+        where: '1=1',
+        outFields: 'Incident_Name,Incident_Type,Status,Start_Date,Location_Description,Size_Acres,Contact_Info,Last_Updated',
+        orderByFields: 'Start_Date DESC',
+        returnGeometry: 'false',
+        f: 'json'
+    });
+
+    const res = await fetch(`${LAYER_URL}?${params}`);
+    const data = await res.json();
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('lastUpdate').innerText =
+        'Last updated: ' + new Date().toLocaleString();
+
+    const table = document.getElementById('incidentTable');
+    const tbody = table.querySelector('tbody');
+    tbody.innerHTML = '';
+
+    data.features.forEach(f => {
+        const a = f.attributes;
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+            <td><strong>${a.Incident_Name || 'Unnamed'}</strong></td>
+            <td>${a.Incident_Type || 'N/A'}</td>
+            <td><span class="status ${statusClass(a.Status)}">${a.Status || 'Unknown'}</span></td>
+            <td>${formatDate(a.Start_Date)}</td>
+            <td>${a.Location_Description || 'N/A'}</td>
+            <td>${a.Size_Acres ? a.Size_Acres.toLocaleString() : 'N/A'}</td>
+            <td>${a.Contact_Info || 'N/A'}</td>
+            <td>${formatDate(a.Last_Updated)}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    table.style.display = 'table';
+}
+
+loadIncidents();
+setInterval(loadIncidents, 300000); // refresh every 5 minutes
+</script>
+</body>
+</html>
