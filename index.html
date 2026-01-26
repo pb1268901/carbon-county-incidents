@@ -235,11 +235,21 @@ function rowClass(status) {
 function mapLink(lon, lat) {
     if (lon == null || lat == null) return "#";
     
+    // Debug: log the coordinates
+    console.log('Raw coords:', { lon, lat });
+    
     // Convert lat/lon to Web Mercator
     const webMerc = convertToWebMercator(lon, lat);
+    console.log('Web Mercator:', webMerc);
     
-    // Adjust the scale value (50000) to zoom in more (smaller number) or out (larger number)
-    return `${experienceUrl}#${mapWidgetId}=center:${webMerc.x},${webMerc.y},102100,scale:50000`;
+    // Create an extent around the point (buffer of ~1000 meters in each direction)
+    const buffer = 1000;
+    const xmin = webMerc.x - buffer;
+    const ymin = webMerc.y - buffer;
+    const xmax = webMerc.x + buffer;
+    const ymax = webMerc.y + buffer;
+    
+    return `${experienceUrl}#${mapWidgetId}=extent:${xmin},${ymin},${xmax},${ymax},102100`;
 }
 
 function updateTimestamp() {
@@ -339,9 +349,6 @@ loadIncidents();
 // refresh every 5 minutes
 setInterval(loadIncidents, 300000);
 </script>
-
-</body>
-</html>
 
 </body>
 </html>
