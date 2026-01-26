@@ -39,37 +39,14 @@ h2 {
     margin-bottom: 12px;
 }
 
-.controls {
-    margin-bottom: 12px;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
 #searchBox {
-    flex: 1;
-    min-width: 250px;
+    width: 100%;
     max-width: 500px;
     padding: 8px;
     border: 2px solid #00666c;
     border-radius: 4px;
     font-size: 0.95em;
-}
-
-.download-btn {
-    padding: 8px 16px;
-    background: #00666c;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9em;
-    font-weight: 500;
-}
-
-.download-btn:hover {
-    background: #007a80;
+    margin-bottom: 12px;
 }
 
 .status-legend {
@@ -174,15 +151,6 @@ a.map-link:hover {
     table {
         font-size: 0.8em;
     }
-    
-    .controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    #searchBox {
-        max-width: 100%;
-    }
 }
 </style>
 </head>
@@ -194,10 +162,7 @@ a.map-link:hover {
 <div class="active-count" id="activeCount">Active incidents: Loading...</div>
 <div class="last-update" id="lastUpdate">Last updated: Loading…</div>
 
-<div class="controls">
-    <input type="text" id="searchBox" placeholder="Search incidents by name, type, or location...">
-    <button class="download-btn" onclick="downloadCSV()">Download CSV</button>
-</div>
+<input type="text" id="searchBox" placeholder="Search incidents by name, type, or location...">
 
 <div class="status-legend">
     <strong>Status Key:</strong> 
@@ -235,6 +200,9 @@ const serviceUrl =
 
 const experienceUrl = "https://experience.arcgis.com/experience/94d51f0847f14abd809b2ab96e66fd37";
 
+
+const mapWidgetId = "widget_1";
+
 function formatDate(value) {
     if (!value) return "N/A";
     const d = new Date(value);
@@ -260,42 +228,14 @@ function rowClass(status) {
 
 function mapLink(lon, lat) {
     if (lon == null || lat == null) return "#";
-    return `${experienceUrl}?center=${lon},${lat}&level=14`;
+    // Using Web Mercator (WKID 102100) and a scale that shows good detail
+    // Adjust the scale value (50000) to zoom in more (smaller number) or out (larger number)
+    return `${experienceUrl}#${mapWidgetId}=center:${lon},${lat},102100,scale:50000`;
 }
 
 function updateTimestamp() {
     document.getElementById("lastUpdate").innerText =
         "Last updated: " + new Date().toLocaleString();
-}
-
-function downloadCSV() {
-    const table = document.getElementById('incidentTable');
-    let csv = [];
-    
-    // Headers
-    const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent);
-    csv.push(headers.join(','));
-    
-    // Rows (only visible ones)
-    const rows = table.querySelectorAll('tbody tr');
-    rows.forEach(row => {
-        if (row.style.display !== 'none') {
-            const cells = Array.from(row.cells).map(cell => {
-                let text = cell.textContent.replace(/"/g, '""').replace(/\n/g, ' ').trim();
-                return `"${text}"`;
-            });
-            csv.push(cells.join(','));
-        }
-    });
-    
-    const csvContent = csv.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `carbon_county_incidents_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
 }
 
 // Search functionality
@@ -390,6 +330,9 @@ loadIncidents();
 // refresh every 5 minutes
 setInterval(loadIncidents, 300000);
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
