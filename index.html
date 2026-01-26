@@ -26,10 +26,59 @@ h2 {
     margin-bottom: 8px;
 }
 
+.active-count {
+    font-size: 0.9em;
+    color: #e53935;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
 .last-update {
     font-size: 0.85em;
     color: #00666c;
     margin-bottom: 12px;
+}
+
+.controls {
+    margin-bottom: 12px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+#searchBox {
+    flex: 1;
+    min-width: 250px;
+    max-width: 500px;
+    padding: 8px;
+    border: 2px solid #00666c;
+    border-radius: 4px;
+    font-size: 0.95em;
+}
+
+.download-btn {
+    padding: 8px 16px;
+    background: #00666c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.download-btn:hover {
+    background: #007a80;
+}
+
+.status-legend {
+    font-size: 0.85em;
+    margin-bottom: 10px;
+    padding: 8px;
+    background: #e8f4f5;
+    border-radius: 4px;
+    color: #00474f;
 }
 
 .table-wrapper {
@@ -125,6 +174,15 @@ a.map-link:hover {
     table {
         font-size: 0.8em;
     }
+    
+    .controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    #searchBox {
+        max-width: 100%;
+    }
 }
 </style>
 </head>
@@ -133,7 +191,20 @@ a.map-link:hover {
 
 <h2>Incident List</h2>
 <div class="subtitle">Ongoing and past incidents</div>
-<div class="last-update" id="lastUpdate">Table last updated: Loading…</div>
+<div class="active-count" id="activeCount">Active incidents: Loading...</div>
+<div class="last-update" id="lastUpdate">Last updated: Loading…</div>
+
+<div class="controls">
+    <input type="text" id="searchBox" placeholder="Search incidents by name, type, or location...">
+    <button class="download-btn" onclick="downloadCSV()">Download CSV</button>
+</div>
+
+<div class="status-legend">
+    <strong>Status Key:</strong> 
+    <span class="status status-active" style="margin-left: 8px;">Active</span>
+    <span class="status status-contained" style="margin-left: 8px;">Contained</span>
+    <span class="status status-closed" style="margin-left: 8px;">Closed</span>
+</div>
 
 <div class="table-wrapper">
 <table id="incidentTable">
@@ -162,7 +233,7 @@ a.map-link:hover {
 const serviceUrl =
   "https://services1.arcgis.com/lo6DwqkHoBfbpsNX/arcgis/rest/services/Carbon_County_Incidents_(Public)/FeatureServer/0/query";
 
-const webmapId = "67afe6c3c1d54e2ebb4fddad01247797";
+const experienceUrl = "https://experience.arcgis.com/experience/94d51f0847f14abd809b2ab96e66fd37";
 
 function formatDate(value) {
     if (!value) return "N/A";
@@ -189,13 +260,54 @@ function rowClass(status) {
 
 function mapLink(lon, lat) {
     if (lon == null || lat == null) return "#";
-    return `https://carbonmt.maps.arcgis.com/apps/mapviewer/index.html?webmap=${webmapId}&center=${lon},${lat}&zoom=14`;
+    return `${experienceUrl}?center=${lon},${lat}&level=14`;
 }
 
 function updateTimestamp() {
     document.getElementById("lastUpdate").innerText =
         "Last updated: " + new Date().toLocaleString();
 }
+
+function downloadCSV() {
+    const table = document.getElementById('incidentTable');
+    let csv = [];
+    
+    // Headers
+    const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent);
+    csv.push(headers.join(','));
+    
+    // Rows (only visible ones)
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        if (row.style.display !== 'none') {
+            const cells = Array.from(row.cells).map(cell => {
+                let text = cell.textContent.replace(/"/g, '""').replace(/\n/g, ' ').trim();
+                return `"${text}"`;
+            });
+            csv.push(cells.join(','));
+        }
+    });
+    
+    const csvContent = csv.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `carbon_county_incidents_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+// Search functionality
+document.getElementById('searchBox').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#incidentTable tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
 
 async function loadIncidents() {
     try {
@@ -215,11 +327,29 @@ async function loadIncidents() {
 
         if (!data.features || data.features.length === 0) {
             tbody.innerHTML = "<tr><td colspan='9'>No incidents found.</td></tr>";
+            document.getElementById('activeCount').innerText = "Active incidents: 0";
             updateTimestamp();
             return;
         }
 
-        data.features.forEach(f => {
+        // Sort by status: Active first, then Contained, then Closed
+        const sorted = data.features.sort((a, b) => {
+            const aStatus = (a.attributes.Status || '').toLowerCase();
+            const bStatus = (b.attributes.Status || '').toLowerCase();
+            
+            const aOrder = aStatus.includes('active') ? 1 : aStatus.includes('contain') ? 2 : 3;
+            const bOrder = bStatus.includes('active') ? 1 : bStatus.includes('contain') ? 2 : 3;
+            
+            return aOrder - bOrder;
+        });
+
+        // Count active incidents
+        const activeCount = sorted.filter(f => 
+            (f.attributes.Status || '').toLowerCase().includes('active')
+        ).length;
+        document.getElementById('activeCount').innerText = `Active incidents: ${activeCount}`;
+
+        sorted.forEach(f => {
             const a = f.attributes;
             const g = f.geometry;
 
@@ -250,6 +380,7 @@ async function loadIncidents() {
         console.error(err);
         document.querySelector("#incidentTable tbody").innerHTML =
             "<tr><td colspan='9'>Error loading incident data.</td></tr>";
+        document.getElementById('activeCount').innerText = "Active incidents: Error loading";
         updateTimestamp();
     }
 }
@@ -262,5 +393,3 @@ setInterval(loadIncidents, 300000);
 
 </body>
 </html>
-
-
