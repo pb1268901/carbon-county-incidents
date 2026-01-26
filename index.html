@@ -126,17 +126,6 @@ tr.closed-row {
     background: #003f45;
 }
 
-/* Links */
-a.map-link {
-    color: #ffcc00;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-a.map-link:hover {
-    text-decoration: underline;
-}
-
 /* Mobile tweaks */
 @media (max-width: 700px) {
     th:nth-child(4),
@@ -183,12 +172,11 @@ a.map-link:hover {
             <th>Acres</th>
             <th>Contact</th>
             <th>Last Updated</th>
-            <th>Map</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td colspan="9">Loading incident data…</td>
+            <td colspan="8">Loading incident data…</td>
         </tr>
     </tbody>
 </table>
@@ -197,17 +185,6 @@ a.map-link:hover {
 <script>
 const serviceUrl =
   "https://services1.arcgis.com/lo6DwqkHoBfbpsNX/arcgis/rest/services/Carbon_County_Incidents_(Public)/FeatureServer/0/query";
-
-const experienceUrl = "https://experience.arcgis.com/experience/94d51f0847f14abd809b2ab96e66fd37";
-const mapWidgetId = "widget_1";
-
-// Convert lat/lon (WKID 4326) to Web Mercator (WKID 102100)
-function convertToWebMercator(lon, lat) {
-    const x = lon * 20037508.34 / 180;
-    let y = Math.log(Math.tan((90 + lat) * Math.PI / 360)) / (Math.PI / 180);
-    y = y * 20037508.34 / 180;
-    return { x, y };
-}
 
 function formatDate(value) {
     if (!value) return "N/A";
@@ -230,26 +207,6 @@ function rowClass(status) {
     if (s.includes("active")) return "active-row";
     if (s.includes("close")) return "closed-row";
     return "";
-}
-
-function mapLink(lon, lat) {
-    if (lon == null || lat == null) return "#";
-    
-    // Debug: log the coordinates
-    console.log('Raw coords:', { lon, lat });
-    
-    // Convert lat/lon to Web Mercator
-    const webMerc = convertToWebMercator(lon, lat);
-    console.log('Web Mercator:', webMerc);
-    
-    // Create an extent around the point (buffer of ~1000 meters in each direction)
-    const buffer = 1000;
-    const xmin = webMerc.x - buffer;
-    const ymin = webMerc.y - buffer;
-    const xmax = webMerc.x + buffer;
-    const ymax = webMerc.y + buffer;
-    
-    return `${experienceUrl}#${mapWidgetId}=extent:${xmin},${ymin},${xmax},${ymax},102100`;
 }
 
 function updateTimestamp() {
@@ -285,7 +242,7 @@ async function loadIncidents() {
         tbody.innerHTML = "";
 
         if (!data.features || data.features.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='9'>No incidents found.</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='8'>No incidents found.</td></tr>";
             document.getElementById('activeCount').innerText = "Active incidents: 0";
             updateTimestamp();
             return;
@@ -315,9 +272,6 @@ async function loadIncidents() {
             const tr = document.createElement("tr");
             tr.className = rowClass(a.Status);
 
-            const lon = g ? g.x : null;
-            const lat = g ? g.y : null;
-
             tr.innerHTML = `
                 <td><strong>${a.Incident_Name || "Unnamed"}</strong></td>
                 <td>${a.Incident_Type || "N/A"}</td>
@@ -327,7 +281,6 @@ async function loadIncidents() {
                 <td>${a.Size_Acres ? a.Size_Acres.toLocaleString() : "N/A"}</td>
                 <td>${a.Contact_Info || "N/A"}</td>
                 <td>${formatDate(a.Last_Updated)}</td>
-                <td>${lon && lat ? `<a class="map-link" href="${mapLink(lon,lat)}" target="_blank">View</a>` : "—"}</td>
             `;
 
             tbody.appendChild(tr);
@@ -338,7 +291,7 @@ async function loadIncidents() {
     } catch (err) {
         console.error(err);
         document.querySelector("#incidentTable tbody").innerHTML =
-            "<tr><td colspan='9'>Error loading incident data.</td></tr>";
+            "<tr><td colspan='8'>Error loading incident data.</td></tr>";
         document.getElementById('activeCount').innerText = "Active incidents: Error loading";
         updateTimestamp();
     }
@@ -349,6 +302,9 @@ loadIncidents();
 // refresh every 5 minutes
 setInterval(loadIncidents, 300000);
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
