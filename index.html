@@ -199,9 +199,15 @@ const serviceUrl =
   "https://services1.arcgis.com/lo6DwqkHoBfbpsNX/arcgis/rest/services/Carbon_County_Incidents_(Public)/FeatureServer/0/query";
 
 const experienceUrl = "https://experience.arcgis.com/experience/94d51f0847f14abd809b2ab96e66fd37";
-
-
 const mapWidgetId = "widget_1";
+
+// Convert lat/lon (WKID 4326) to Web Mercator (WKID 102100)
+function convertToWebMercator(lon, lat) {
+    const x = lon * 20037508.34 / 180;
+    let y = Math.log(Math.tan((90 + lat) * Math.PI / 360)) / (Math.PI / 180);
+    y = y * 20037508.34 / 180;
+    return { x, y };
+}
 
 function formatDate(value) {
     if (!value) return "N/A";
@@ -228,9 +234,12 @@ function rowClass(status) {
 
 function mapLink(lon, lat) {
     if (lon == null || lat == null) return "#";
-    // Using Web Mercator (WKID 102100) and a scale that shows good detail
+    
+    // Convert lat/lon to Web Mercator
+    const webMerc = convertToWebMercator(lon, lat);
+    
     // Adjust the scale value (50000) to zoom in more (smaller number) or out (larger number)
-    return `${experienceUrl}#${mapWidgetId}=center:${lon},${lat},102100,scale:50000`;
+    return `${experienceUrl}#${mapWidgetId}=center:${webMerc.x},${webMerc.y},102100,scale:50000`;
 }
 
 function updateTimestamp() {
