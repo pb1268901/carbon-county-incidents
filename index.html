@@ -117,6 +117,16 @@ th {
     color: #fff;
 }
 
+/* Road closure indicator */
+.road-closure-yes {
+    color: #fbc02d;
+    font-weight: 600;
+}
+
+.road-closure-no {
+    color: #90a4ae;
+}
+
 /* Row emphasis */
 tr.active-row {
     background: #004f58;
@@ -170,13 +180,14 @@ tr.closed-row {
             <th>Start Date</th>
             <th>Location</th>
             <th>Acres</th>
+            <th>Road Closures</th>
             <th>Contact</th>
             <th>Last Updated</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td colspan="8">Loading incident data…</td>
+            <td colspan="9">Loading incident data…</td>
         </tr>
     </tbody>
 </table>
@@ -185,6 +196,12 @@ tr.closed-row {
 <script>
 const serviceUrl =
   "https://services1.arcgis.com/lo6DwqkHoBfbpsNX/arcgis/rest/services/Carbon_County_Incidents_(Public)/FeatureServer/0/query";
+
+// Road closure layer URLs (from the feature service)
+const roadLayerBaseUrl = "https://services1.arcgis.com/lo6DwqkHoBfbpsNX/arcgis/rest/services/Carbon_County_Incidents_(Public)/FeatureServer";
+const roadBlockLayerUrl = `${roadLayerBaseUrl}/1/query`; // RoadBlock
+const roadDetoursLayerUrl = `${roadLayerBaseUrl}/2/query`; // RoadDetours
+const roadClosuresLayerUrl = `${roadLayerBaseUrl}/3/query`; // RoadClosures
 
 function formatDate(value) {
     if (!value) return "N/A";
@@ -225,6 +242,57 @@ document.getElementById('searchBox').addEventListener('input', function(e) {
     });
 });
 
+// Fetch all Incident IDs from a road layer
+async function fetchRoadIncidentIDs(layerUrl) {
+    try {
+        const params = new URLSearchParams({
+            where: "1=1",
+            outFields: "IncidentID",
+            returnGeometry: false,
+            f: "json"
+        });
+
+        const res = await fetch(`${layerUrl}?${params}`);
+        const data = await res.json();
+
+        if (!data.features) return new Set();
+
+        // Extract all IncidentID values
+        const ids = data.features
+            .map(f => f.attributes.IncidentID)
+            .filter(id => id != null && id !== '');
+        
+        return new Set(ids);
+    } catch (err) {
+        console.error('Error fetching road layer:', layerUrl, err);
+        return new Set();
+    }
+}
+
+// Check if an Incident_ID has any road closures
+async function getRoadClosureData() {
+    try {
+        // Fetch all three road layers in parallel
+        const [blockIDs, detourIDs, closureIDs] = await Promise.all([
+            fetchRoadIncidentIDs(roadBlockLayerUrl),
+            fetchRoadIncidentIDs(roadDetoursLayerUrl),
+            fetchRoadIncidentIDs(roadClosuresLayerUrl)
+        ]);
+
+        // Combine all IDs into one set
+        const allRoadIncidentIDs = new Set([
+            ...blockIDs,
+            ...detourIDs,
+            ...closureIDs
+        ]);
+
+        return allRoadIncidentIDs;
+    } catch (err) {
+        console.error('Error getting road closure data:', err);
+        return new Set();
+    }
+}
+
 async function loadIncidents() {
     try {
         const params = new URLSearchParams({
@@ -235,14 +303,19 @@ async function loadIncidents() {
             f: "json"
         });
 
-        const res = await fetch(`${serviceUrl}?${params}`);
-        const data = await res.json();
+        // Fetch both incidents and road closure data
+        const [incidentsRes, roadIncidentIDs] = await Promise.all([
+            fetch(`${serviceUrl}?${params}`),
+            getRoadClosureData()
+        ]);
+
+        const data = await incidentsRes.json();
 
         const tbody = document.querySelector("#incidentTable tbody");
         tbody.innerHTML = "";
 
         if (!data.features || data.features.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='8'>No incidents found.</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='9'>No incidents found.</td></tr>";
             document.getElementById('activeCount').innerText = "Active incidents: 0";
             updateTimestamp();
             return;
@@ -269,6 +342,13 @@ async function loadIncidents() {
             const a = f.attributes;
             const g = f.geometry;
 
+            // Check if this incident has road closures
+            // Note: Incident points layer uses 'Incident_ID' (with underscore)
+            // Road layers use 'IncidentID' (no underscore)
+            const hasRoadClosure = roadIncidentIDs.has(a.Incident_ID);
+            const roadClosureText = hasRoadClosure ? 'Yes' : 'No';
+            const roadClosureClass = hasRoadClosure ? 'road-closure-yes' : 'road-closure-no';
+
             const tr = document.createElement("tr");
             tr.className = rowClass(a.Status);
 
@@ -279,6 +359,7 @@ async function loadIncidents() {
                 <td>${formatDate(a.Start_Date)}</td>
                 <td>${a.Location_Description || "N/A"}</td>
                 <td>${a.Size_Acres ? a.Size_Acres.toLocaleString() : "N/A"}</td>
+                <td><span class="${roadClosureClass}">${roadClosureText}</span></td>
                 <td>${a.Contact_Info || "N/A"}</td>
                 <td>${formatDate(a.Last_Updated)}</td>
             `;
@@ -291,7 +372,7 @@ async function loadIncidents() {
     } catch (err) {
         console.error(err);
         document.querySelector("#incidentTable tbody").innerHTML =
-            "<tr><td colspan='8'>Error loading incident data.</td></tr>";
+            "<tr><td colspan='9'>Error loading incident data.</td></tr>";
         document.getElementById('activeCount').innerText = "Active incidents: Error loading";
         updateTimestamp();
     }
@@ -302,9 +383,6 @@ loadIncidents();
 // refresh every 5 minutes
 setInterval(loadIncidents, 300000);
 </script>
-
-</body>
-</html>
 
 </body>
 </html>
