@@ -170,7 +170,7 @@ tr.closed-row {
             <th>Start Date</th>
             <th>Location</th>
             <th>Acres</th>
-            <th>Evacuations</th>
+            <th>Additional Info</th>
             <th>Contact</th>
             <th>Last Updated</th>
         </tr>
@@ -279,7 +279,7 @@ async function loadIncidents() {
                 <td>${formatDate(a.Start_Date)}</td>
                 <td>${a.Location_Description || "N/A"}</td>
                 <td>${a.Size_Acres ? a.Size_Acres.toLocaleString() : "N/A"}</td>
-                <td>${a.Evacuations || "N/A"}</td>
+                <td>${a.Additional_Info || "N/A"}</td>
                 <td>${a.Contact_Info || "N/A"}</td>
                 <td>${formatDate(a.Last_Updated)}</td>
             `;
