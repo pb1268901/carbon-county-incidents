@@ -1,308 +1,359 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Carbon County Incident List</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carbon Alert — Incidents &amp; Evacuations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<style>
-body {
-    font-family: Arial, Helvetica, sans-serif;
-    margin: 0;
-    padding: 10px;
-    background: #f5f5f5;
-    color: #00474f; /* dark blue text for headers and outside table */
-}
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #f5f5f5;
+      color: #00474f;
+      padding: 16px;
+    }
 
-h2 {
-    margin: 0 0 4px 0;
-    font-size: 2em; /* bigger title */
-    font-weight: bold;
-    color: #00474f; /* dark blue */
-}
+    /* Evacuations */
+    .evac-section { margin-bottom: 28px; }
 
-.subtitle {
-    font-size: 0.95em;
-    color: #00666c; /* darker teal */
-    margin-bottom: 8px;
-}
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .section-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .section-title { font-size: 1.3em; font-weight: 800; color: #00474f; }
 
-.active-count {
-    font-size: 0.9em;
-    color: #e53935;
-    font-weight: 600;
-    margin-bottom: 8px;
-}
+    .evac-none {
+      background: #e8f5e9;
+      border: 1.5px solid #a5d6a7;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 0.9em;
+      font-weight: 700;
+      color: #2e7d32;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .evac-card { border-radius: 6px; padding: 14px 18px; margin-bottom: 10px; }
+    .evac-card:last-child { margin-bottom: 0; }
+    .evac-order    { background: #fef2f2; border: 1.5px solid #fecaca; border-left: 5px solid #dc2626; }
+    .evac-warning  { background: #fff7ed; border: 1.5px solid #fed7aa; border-left: 5px solid #ea580c; }
+    .evac-advisory { background: #fefce8; border: 1.5px solid #fde047; border-left: 5px solid #ca8a04; }
+    .evac-level { font-size: 0.7em; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+    .evac-area { font-size: 1em; font-weight: 800; color: #1c1917; margin-bottom: 5px; }
+    .evac-message { font-size: 0.88em; color: #4b5563; line-height: 1.7; margin-bottom: 6px; }
+    .evac-meta { font-size: 0.78em; color: #9ca3af; }
+    .evac-loading { font-size: 0.88em; color: #9ca3af; font-style: italic; }
+    .evac-error   { font-size: 0.88em; color: #dc2626; font-style: italic; }
 
-.last-update {
-    font-size: 0.85em;
-    color: #00666c;
-    margin-bottom: 12px;
-}
+    /* Incidents */
+    .incident-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .active-count { font-size: 0.88em; color: #e53935; font-weight: 700; }
+    .last-update  { font-size: 0.82em; color: #00666c; }
 
-#searchBox {
-    width: 100%;
-    max-width: 500px;
-    padding: 8px;
-    border: 2px solid #00666c;
-    border-radius: 4px;
-    font-size: 0.95em;
-    margin-bottom: 12px;
-}
+    #searchBox {
+      width: 100%;
+      max-width: 500px;
+      padding: 8px 12px;
+      border: 2px solid #00666c;
+      border-radius: 4px;
+      font-size: 0.9em;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin-bottom: 10px;
+      display: block;
+    }
 
-.status-legend {
-    font-size: 0.85em;
-    margin-bottom: 10px;
-    padding: 8px;
-    background: #e8f4f5;
-    border-radius: 4px;
-    color: #00474f;
-}
+    .status-legend {
+      font-size: 0.82em;
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      background: #e8f4f5;
+      border-radius: 4px;
+      color: #00474f;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
 
-.table-wrapper {
-    max-height: 600px;
-    overflow-y: auto;
-    border-radius: 6px;
-    background-color: #00474f; /* dark teal background */
-    padding: 6px;
-}
-
-/* Table */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85em;
-    color: #ffffff;
-}
-
-thead {
-    position: sticky;
-    top: 0;
-    background: #00666c; /* slightly lighter header */
-    z-index: 1;
-}
-
-th, td {
-    padding: 8px 10px;
-    border-bottom: 1px solid #007a80;
-    vertical-align: top;
-    color: #ffffff;
-}
-
-th {
-    text-align: left;
-    font-weight: 600;
-}
-
-/* Status styling */
-.status {
-    font-weight: 600;
-    padding: 3px 8px;
-    border-radius: 10px;
-    font-size: 0.75em;
-    display: inline-block;
-}
-
-.status-active {
-    background: #e53935;
-    color: #fff;
-}
-
-.status-contained {
-    background: #fbc02d;
-    color: #000;
-}
-
-.status-closed {
-    background: #43a047;
-    color: #fff;
-}
-
-/* Row emphasis */
-tr.active-row {
-    background: #004f58;
-}
-
-tr.closed-row {
-    background: #003f45;
-}
-
-/* Mobile tweaks */
-@media (max-width: 700px) {
-    th:nth-child(4),
-    td:nth-child(4),
-    th:nth-child(6),
-    td:nth-child(6),
-    th:nth-child(7),
-    td:nth-child(7) {
-        display: none;
+    .table-wrapper {
+      border-radius: 6px;
+      background-color: #00474f;
+      padding: 6px;
+      overflow-x: auto;
     }
 
     table {
-        font-size: 0.8em;
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85em;
+      color: #ffffff;
     }
-}
-</style>
-</head>
+    thead {
+      position: sticky;
+      top: 0;
+      background: #00666c;
+      z-index: 1;
+    }
+    th, td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #007a80;
+      vertical-align: top;
+      color: #ffffff;
+      text-align: left;
+    }
+    th { font-weight: 700; font-size: 0.82em; letter-spacing: 0.03em; }
+    tr.active-row { background: #004f58; }
+    tr.closed-row { background: #003f45; }
+    tr:hover td   { background: rgba(255,255,255,0.06); }
 
+    .status {
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.78em;
+      display: inline-block;
+      white-space: nowrap;
+    }
+    .status-active     { background: #e53935; color: #fff; }
+    .status-contained  { background: #fbc02d; color: #000; }
+    .status-closed     { background: #43a047; color: #fff; }
+
+    .ca-flag { font-size: 0.78em; font-weight: 700; margin-top: 3px; }
+
+    @media (max-width: 650px) {
+      body { padding: 10px; }
+      th:nth-child(4), td:nth-child(4),
+      th:nth-child(6), td:nth-child(6) { display: none; }
+      table { font-size: 0.8em; }
+    }
+  </style>
+</head>
 <body>
 
-<h2>Incident List</h2>
-<div class="subtitle">Ongoing and past incidents</div>
-<div class="active-count" id="activeCount">Active incidents: Loading...</div>
-<div class="last-update" id="lastUpdate">Last updated: Loading…</div>
+  <!-- EVACUATIONS -->
+  <div class="evac-section">
+    <div class="section-header">
+      <span class="section-dot" style="background:#dc2626;"></span>
+      <span class="section-title">Evacuations</span>
+    </div>
+    <div id="ca-evac" class="evac-loading">Loading evacuation status...</div>
+  </div>
 
-<input type="text" id="searchBox" placeholder="Search incidents by name, type, or location...">
+  <!-- INCIDENTS -->
+  <div>
+    <div class="section-header">
+      <span class="section-dot" style="background:#00474f;"></span>
+      <span class="section-title">Incident List</span>
+    </div>
 
-<div class="status-legend">
-    <strong>Status Key:</strong> 
-    <span class="status status-active" style="margin-left: 8px;">Active</span>
-    <span class="status status-contained" style="margin-left: 8px;">Contained</span>
-    <span class="status status-closed" style="margin-left: 8px;">Closed</span>
-</div>
+    <div class="incident-meta">
+      <div class="active-count" id="activeCount">Active incidents: Loading...</div>
+      <div class="last-update" id="lastUpdate">Last updated: Loading...</div>
+    </div>
 
-<div class="table-wrapper">
-<table id="incidentTable">
-    <thead>
-        <tr>
+    <input type="text" id="searchBox" placeholder="Search by name, type, or location..." />
+
+    <div class="status-legend">
+      <strong>Status:</strong>
+      <span class="status status-active">Active</span>
+      <span class="status status-contained">Contained</span>
+      <span class="status status-closed">Closed</span>
+    </div>
+
+    <div class="table-wrapper">
+      <table id="incidentTable">
+        <thead>
+          <tr>
             <th>Incident</th>
             <th>Type</th>
             <th>Status</th>
             <th>Start Date</th>
             <th>Location</th>
             <th>Acres</th>
-            <th>Additional Info</th>
             <th>Contact</th>
-            <th>Last Updated</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="9">Loading incident data…</td>
-        </tr>
-    </tbody>
-</table>
-</div>
+            <th>Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="8">Loading incident data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-<script>
-const serviceUrl =
-  "https://services1.arcgis.com/lo6DwqkHoBfbpsNX/arcgis/rest/services/Carbon_County_Incidents_(Public)/FeatureServer/0/query";
+  <script>
+    var BASE = 'https://services1.arcgis.com/lo6DwqkHoBfbpsNX/arcgis/rest/services/Carbon_County_Incidents/FeatureServer';
 
-function formatDate(value) {
-    if (!value) return "N/A";
-    const d = new Date(value);
-    return isNaN(d) ? "N/A" : d.toLocaleDateString();
-}
+    function fld(v) { return (v !== null && v !== undefined && v !== '') ? v : 'N/A'; }
 
-function statusClass(status) {
-    if (!status) return "";
-    const s = status.toLowerCase();
-    if (s.includes("active")) return "status-active";
-    if (s.includes("contain")) return "status-contained";
-    if (s.includes("close")) return "status-closed";
-    return "";
-}
+    function formatDate(v) {
+      if (!v) return 'N/A';
+      var d = new Date(v);
+      return isNaN(d) ? 'N/A' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
 
-function rowClass(status) {
-    if (!status) return "";
-    const s = status.toLowerCase();
-    if (s.includes("active")) return "active-row";
-    if (s.includes("close")) return "closed-row";
-    return "";
-}
+    function statusClass(s) {
+      if (!s) return '';
+      s = s.toLowerCase();
+      if (s.includes('active'))  return 'status-active';
+      
+      if (s.includes('contain')) return 'status-contained';
+      if (s.includes('clos'))    return 'status-closed';
+      return '';
+    }
 
-function updateTimestamp() {
-    document.getElementById("lastUpdate").innerText =
-        "Last updated: " + new Date().toLocaleString();
-}
+    function rowClass(s) {
+      if (!s) return '';
+      s = s.toLowerCase();
+      if (s.includes('active')) return 'active-row';
+      if (s.includes('clos'))   return 'closed-row';
+      return '';
+    }
 
-// Search functionality
-document.getElementById('searchBox').addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const rows = document.querySelectorAll('#incidentTable tbody tr');
-    
-    rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    function updateTimestamp() {
+      document.getElementById('lastUpdate').textContent =
+        'Last updated: ' + new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    document.getElementById('searchBox').addEventListener('input', function(e) {
+      var term = e.target.value.toLowerCase();
+      document.querySelectorAll('#incidentTable tbody tr').forEach(function(row) {
+        row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
+      });
     });
-});
 
-async function loadIncidents() {
-    try {
-        const params = new URLSearchParams({
-            where: "1=1",
-            outFields: "*",
-            returnGeometry: true,
-            outSR: "4326",
-            f: "json"
-        });
+    function loadIncidents() {
+      fetch(BASE + '/0/query?' + new URLSearchParams({
+        where: '1=1',
+        outFields: 'Incident_Name,Incident_Type,Status,Start_Date,Location_Description,Size_Acres,Contact_Info,Last_Updated,Evacuations,Road_Closures,RC_Details',
+        orderByFields: 'Status,Last_Updated DESC',
+        f: 'json'
+      }))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var features = data.features || [];
+        var tbody    = document.querySelector('#incidentTable tbody');
+        tbody.innerHTML = '';
 
-        const incidentsRes = await fetch(`${serviceUrl}?${params}`);
-        const data = await incidentsRes.json();
-
-        const tbody = document.querySelector("#incidentTable tbody");
-        tbody.innerHTML = "";
-
-        if (!data.features || data.features.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='9'>No incidents found.</td></tr>";
-            document.getElementById('activeCount').innerText = "Active incidents: 0";
-            updateTimestamp();
-            return;
+        if (!features.length) {
+          tbody.innerHTML = '<tr><td colspan="8">No incidents found.</td></tr>';
+          document.getElementById('activeCount').textContent = 'Active incidents: 0';
+          updateTimestamp();
+          return;
         }
 
-        // Sort by status: Active first, then Contained, then Closed
-        const sorted = data.features.sort((a, b) => {
-            const aStatus = (a.attributes.Status || '').toLowerCase();
-            const bStatus = (b.attributes.Status || '').toLowerCase();
-            
-            const aOrder = aStatus.includes('active') ? 1 : aStatus.includes('contain') ? 2 : 3;
-            const bOrder = bStatus.includes('active') ? 1 : bStatus.includes('contain') ? 2 : 3;
-            
-            return aOrder - bOrder;
+        features.sort(function(a, b) {
+          var as = (a.attributes.Status || '').toLowerCase();
+          var bs = (b.attributes.Status || '').toLowerCase();
+          var ao = 5, bo = 5;
+          Object.keys(order).forEach(function(k) {
+            if (as.includes(k)) ao = order[k];
+            if (bs.includes(k)) bo = order[k];
+          });
+          return ao - bo;
         });
 
-        // Count active incidents
-        const activeCount = sorted.filter(f => 
-            (f.attributes.Status || '').toLowerCase().includes('active')
-        ).length;
-        document.getElementById('activeCount').innerText = `Active incidents: ${activeCount}`;
+        var activeCount = features.filter(function(f) {
+          return (f.attributes.Status || '').toLowerCase().includes('active');
+        }).length;
+        document.getElementById('activeCount').textContent = 'Active incidents: ' + activeCount;
 
-        sorted.forEach(f => {
-            const a = f.attributes;
+        features.forEach(function(f) {
+          var a  = f.attributes;
+          var tr = document.createElement('tr');
+          tr.className = rowClass(a.Status);
 
-            const tr = document.createElement("tr");
-            tr.className = rowClass(a.Status);
+          var nameCell = '<strong>' + (a.Incident_Name || 'Unnamed') + '</strong>';
+          if (a.Evacuations && a.Evacuations.toLowerCase() === 'yes')
+            nameCell += '<div class="ca-flag" style="color:#fca5a5;">Evacuation in effect</div>';
+          if (a.Road_Closures && a.Road_Closures.toLowerCase() === 'yes')
+            nameCell += '<div class="ca-flag" style="color:#fcd34d;">Road closures' +
+              (a.RC_Details ? ': ' + a.RC_Details : ' in effect') + '</div>';
 
-            tr.innerHTML = `
-                <td><strong>${a.Incident_Name || "Unnamed"}</strong></td>
-                <td>${a.Incident_Type || "N/A"}</td>
-                <td><span class="status ${statusClass(a.Status)}">${a.Status || "N/A"}</span></td>
-                <td>${formatDate(a.Start_Date)}</td>
-                <td>${a.Location_Description || "N/A"}</td>
-                <td>${a.Size_Acres ? a.Size_Acres.toLocaleString() : "N/A"}</td>
-                <td>${a.Additional_Info || "N/A"}</td>
-                <td>${a.Contact_Info || "N/A"}</td>
-                <td>${formatDate(a.Last_Updated)}</td>
-            `;
+          tr.innerHTML =
+            '<td>' + nameCell + '</td>' +
+            '<td>' + fld(a.Incident_Type) + '</td>' +
+            '<td><span class="status ' + statusClass(a.Status) + '">' + fld(a.Status) + '</span></td>' +
+            '<td>' + formatDate(a.Start_Date) + '</td>' +
+            '<td>' + fld(a.Location_Description) + '</td>' +
+            '<td>' + (a.Size_Acres ? parseFloat(a.Size_Acres).toLocaleString() + ' ac' : 'N/A') + '</td>' +
+            '<td>' + fld(a.Contact_Info) + '</td>' +
+            '<td style="white-space:nowrap;">' + formatDate(a.Last_Updated) + '</td>';
 
-            tbody.appendChild(tr);
+          tbody.appendChild(tr);
         });
 
         updateTimestamp();
-
-    } catch (err) {
-        console.error(err);
-        document.querySelector("#incidentTable tbody").innerHTML =
-            "<tr><td colspan='9'>Error loading incident data.</td></tr>";
-        document.getElementById('activeCount').innerText = "Active incidents: Error loading";
+      })
+      .catch(function() {
+        document.querySelector('#incidentTable tbody').innerHTML =
+          '<tr><td colspan="8">Error loading incident data.</td></tr>';
+        document.getElementById('activeCount').textContent = 'Active incidents: Error loading';
         updateTimestamp();
+      });
     }
-}
 
-// initial load
-loadIncidents();
-// refresh every 5 minutes
-setInterval(loadIncidents, 300000);
-</script>
+    function loadEvacuations() {
+      fetch(BASE + '/1/query?' + new URLSearchParams({
+        where: "Status = 'Active'",
+        outFields: 'Zone_Level,Affected_Area,Public_Message,Effective_Date,Last_Updated',
+        orderByFields: 'Effective_Date DESC',
+        f: 'json'
+      }))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var el       = document.getElementById('ca-evac');
+        var features = data.features || [];
+        el.className = '';
+
+        if (!features.length) {
+          el.innerHTML = '<div class="evac-none"><span>&#10003;</span> No evacuation orders or warnings in effect.</div>';
+          return;
+        }
+
+        el.innerHTML = features.map(function(f) {
+          var a     = f.attributes;
+          var level = (a.Zone_Level || '').toLowerCase();
+          var cls   = 'evac-card ';
+          var color = '#ca8a04';
+          if (level.indexOf('order') > -1)        { cls += 'evac-order';    color = '#dc2626'; }
+          else if (level.indexOf('warning') > -1) { cls += 'evac-warning';  color = '#ea580c'; }
+          else                                    { cls += 'evac-advisory'; }
+
+          return '<div class="' + cls + '">' +
+            '<div class="evac-level" style="color:' + color + ';">' + (a.Zone_Level || '') + '</div>' +
+            '<div class="evac-area">' + (a.Affected_Area || '') + '</div>' +
+            (a.Public_Message ? '<div class="evac-message">' + a.Public_Message + '</div>' : '') +
+            '<div class="evac-meta">Effective: ' + formatDate(a.Effective_Date) +
+              (a.Last_Updated ? ' &nbsp;|&nbsp; Updated: ' + formatDate(a.Last_Updated) : '') +
+            '</div></div>';
+        }).join('');
+      })
+      .catch(function() {
+        var el = document.getElementById('ca-evac');
+        el.className = 'evac-error';
+        el.textContent = 'Unable to load evacuation data. Please refresh the page.';
+      });
+    }
+
+    loadIncidents();
+    loadEvacuations();
+    setInterval(function() { loadIncidents(); loadEvacuations(); }, 300000);
+  </script>
 
 </body>
 </html>
