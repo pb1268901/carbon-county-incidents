@@ -309,9 +309,8 @@
 
     function loadEvacuations() {
       fetch(BASE + '/1/query?' + new URLSearchParams({
-        where: "Status = 'Active'",
-        outFields: 'Zone_Level,Affected_Area,Public_Message,Effective_Date,Last_Updated',
-        orderByFields: 'Effective_Date DESC',
+        where: '1=1',
+        outFields: 'Zone_Level,Status,Affected_Area',
         f: 'json'
       }))
       .then(function(r) { return r.json(); })
