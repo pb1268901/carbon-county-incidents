@@ -310,13 +310,16 @@
     function loadEvacuations() {
       fetch(BASE + '/1/query?' + new URLSearchParams({
         where: '1=1',
-        outFields: 'Zone_Level,Status,Affected_Area',
+        outFields: 'Zone_Level,Status,Affected_Area,Public_Message,Effective_Date',
+        orderByFields: 'Effective_Date DESC',
         f: 'json'
       }))
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        var el       = document.getElementById('ca-evac');
-        var features = data.features || [];
+        var el = document.getElementById('ca-evac');
+        var features = (data.features || []).filter(function(f) {
+          return (f.attributes.Status || '').toLowerCase() !== 'lifted';
+        });
         el.className = '';
 
         if (!features.length) {
