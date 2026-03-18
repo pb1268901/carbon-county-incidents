@@ -255,7 +255,7 @@
           updateTimestamp();
           return;
         }
-
+        var order = { active: 1, contained: 2, closed: 3 };
         features.sort(function(a, b) {
           var as = (a.attributes.Status || '').toLowerCase();
           var bs = (b.attributes.Status || '').toLowerCase();
