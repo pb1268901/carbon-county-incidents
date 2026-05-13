@@ -16,9 +16,8 @@
       padding: 16px;
     }
 
-    /* Evacuations */
+    /* ── Shared section chrome ── */
     .evac-section { margin-bottom: 28px; }
-
     .section-header {
       display: flex;
       align-items: center;
@@ -28,6 +27,7 @@
     .section-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
     .section-title { font-size: 1.3em; font-weight: 800; color: #00474f; }
 
+    /* ── Evacuations ── */
     .evac-none {
       background: #e8f5e9;
       border: 1.5px solid #a5d6a7;
@@ -46,13 +46,13 @@
     .evac-warning  { background: #fff7ed; border: 1.5px solid #fed7aa; border-left: 5px solid #ea580c; }
     .evac-advisory { background: #fefce8; border: 1.5px solid #fde047; border-left: 5px solid #ca8a04; }
     .evac-level { font-size: 0.7em; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
-    .evac-area { font-size: 1em; font-weight: 800; color: #1c1917; margin-bottom: 5px; }
+    .evac-area    { font-size: 1em; font-weight: 800; color: #1c1917; margin-bottom: 5px; }
     .evac-message { font-size: 0.88em; color: #4b5563; line-height: 1.7; margin-bottom: 6px; }
-    .evac-meta { font-size: 0.78em; color: #9ca3af; }
+    .evac-meta    { font-size: 0.78em; color: #9ca3af; }
     .evac-loading { font-size: 0.88em; color: #9ca3af; font-style: italic; }
     .evac-error   { font-size: 0.88em; color: #dc2626; font-style: italic; }
 
-    /* Incidents */
+    /* ── Incident table chrome ── */
     .incident-meta {
       display: flex;
       align-items: center;
@@ -64,7 +64,7 @@
     .active-count { font-size: 0.88em; color: #e53935; font-weight: 700; }
     .last-update  { font-size: 0.82em; color: #00666c; }
 
-    #searchBox {
+    .search-box {
       width: 100%;
       max-width: 500px;
       padding: 8px 12px;
@@ -134,17 +134,122 @@
 
     .ca-flag { font-size: 0.78em; font-weight: 700; margin-top: 3px; }
 
+    /* ── Road Closures section ── */
+    .road-section { margin-bottom: 28px; margin-top: 32px; }
+
+    .road-none {
+      background: #fefce8;
+      border: 1.5px solid #fde68a;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 0.9em;
+      font-weight: 700;
+      color: #92400e;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Road closure table gets its own amber/brown palette */
+    .road-table-wrapper {
+      border-radius: 6px;
+      background-color: #451a03;
+      padding: 6px;
+      overflow-x: auto;
+    }
+
+    .road-table-wrapper table { color: #fff; }
+
+    .road-table-wrapper thead { background: #78350f; }
+
+    .road-table-wrapper th,
+    .road-table-wrapper td {
+      border-bottom: 1px solid #92400e;
+      color: #fff;
+    }
+
+    tr.road-active-row  { background: #5c2d0a; }
+    tr.road-closed-row  { background: #3b1505; }
+    .road-table-wrapper tr:hover td { background: rgba(255,255,255,0.07); }
+
+    .road-badge {
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.78em;
+      display: inline-block;
+      white-space: nowrap;
+    }
+    .road-badge-active { background: #dc2626; color: #fff; }
+    .road-badge-inactive { background: #6b7280; color: #fff; }
+
+    .road-full-tag {
+      display: inline-block;
+      font-size: 0.72em;
+      font-weight: 700;
+      background: #fef2f2;
+      color: #991b1b;
+      border-radius: 4px;
+      padding: 1px 6px;
+      margin-top: 3px;
+    }
+
+    .road-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .road-count       { font-size: 0.88em; color: #b45309; font-weight: 700; }
+    .road-last-update { font-size: 0.82em; color: #78350f; }
+
+    .road-search-box {
+      width: 100%;
+      max-width: 500px;
+      padding: 8px 12px;
+      border: 2px solid #92400e;
+      border-radius: 4px;
+      font-size: 0.9em;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin-bottom: 10px;
+      display: block;
+      background: #fff;
+      color: #1c1917;
+    }
+
+    .road-legend {
+      font-size: 0.82em;
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      background: #fef3c7;
+      border-radius: 4px;
+      color: #78350f;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .road-loading { font-size: 0.88em; color: #9ca3af; font-style: italic; }
+    .road-error   { font-size: 0.88em; color: #dc2626; font-style: italic; }
+
     @media (max-width: 650px) {
       body { padding: 10px; }
-      th:nth-child(4), td:nth-child(4),
-      th:nth-child(6), td:nth-child(6) { display: none; }
+      /* incident table: hide start date + acres on mobile */
+      #incidentTable th:nth-child(4), #incidentTable td:nth-child(4),
+      #incidentTable th:nth-child(6), #incidentTable td:nth-child(6) { display: none; }
+      /* road table: hide end date + contact on mobile */
+      #roadTable th:nth-child(5), #roadTable td:nth-child(5),
+      #roadTable th:nth-child(7), #roadTable td:nth-child(7) { display: none; }
       table { font-size: 0.8em; }
     }
   </style>
 </head>
 <body>
 
-  <!-- EVACUATIONS -->
+  <!-- ═══════════════════════════ EVACUATIONS ═══════════════════════════ -->
   <div class="evac-section">
     <div class="section-header">
       <span class="section-dot" style="background:#dc2626;"></span>
@@ -153,7 +258,7 @@
     <div id="ca-evac" class="evac-loading">Loading evacuation status...</div>
   </div>
 
-  <!-- INCIDENTS -->
+  <!-- ════════════════════════════ INCIDENTS ════════════════════════════ -->
   <div>
     <div class="section-header">
       <span class="section-dot" style="background:#00474f;"></span>
@@ -162,10 +267,10 @@
 
     <div class="incident-meta">
       <div class="active-count" id="activeCount">Active incidents: Loading...</div>
-      <div class="last-update" id="lastUpdate">Last updated: Loading...</div>
+      <div class="last-update"  id="lastUpdate">Last updated: Loading...</div>
     </div>
 
-    <input type="text" id="searchBox" placeholder="Search by name, type, or location..." />
+    <input class="search-box" type="text" id="searchBox" placeholder="Search by name, type, or location..." />
 
     <div class="status-legend">
       <strong>Status:</strong>
@@ -195,8 +300,36 @@
     </div>
   </div>
 
+  <!-- ═══════════════════════════ ROAD CLOSURES ═══════════════════════════ -->
+  <div class="road-section">
+    <div class="section-header">
+      <span class="section-dot" style="background:#b45309;"></span>
+      <span class="section-title">Road Closures</span>
+    </div>
+
+    <div class="road-meta">
+      <div class="road-count"       id="roadCount">Active closures: Loading...</div>
+      <div class="road-last-update" id="roadLastUpdate">Last updated: Loading...</div>
+    </div>
+
+    <input class="road-search-box" type="text" id="roadSearchBox" placeholder="Search by name, location, or reason..." />
+
+    <div class="road-legend">
+      <strong>Status:</strong>
+      <span class="road-badge road-badge-active">Active</span>
+      <span class="road-badge road-badge-inactive">Inactive</span>
+      &nbsp;|&nbsp; <strong>FULL CLOSURE</strong> tag indicates road is completely blocked.
+    </div>
+
+    <div id="roadContent" class="road-loading">Loading road closure data...</div>
+  </div>
+
   <script>
-    var BASE = 'https://services1.arcgis.com/lo6DwqkHoBfbpsNX/ArcGIS/rest/services/Carbon_County_Incidents-_Public/FeatureServer';
+    /* ─────────────────────────────────────────────────────
+       Shared helpers
+    ───────────────────────────────────────────────────── */
+    var INCIDENT_BASE = 'https://services1.arcgis.com/lo6DwqkHoBfbpsNX/ArcGIS/rest/services/Carbon_County_Incidents-_Public/FeatureServer';
+    var ROAD_BASE     = 'https://services1.arcgis.com/lo6DwqkHoBfbpsNX/arcgis/rest/services/Road_Closures/FeatureServer';
 
     function fld(v) { return (v !== null && v !== undefined && v !== '') ? v : 'N/A'; }
 
@@ -206,16 +339,21 @@
       return isNaN(d) ? 'N/A' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
+    function now() {
+      return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    /* ─────────────────────────────────────────────────────
+       Incident helpers
+    ───────────────────────────────────────────────────── */
     function statusClass(s) {
       if (!s) return '';
       s = s.toLowerCase();
-      if (s.includes('active'))  return 'status-active';
-      
-      if (s.includes('contain')) return 'status-contained';
-      if (s.includes('clos'))    return 'status-closed';
+      if (s.includes('active'))   return 'status-active';
+      if (s.includes('contain'))  return 'status-contained';
+      if (s.includes('clos'))     return 'status-closed';
       return '';
     }
-
     function rowClass(s) {
       if (!s) return '';
       s = s.toLowerCase();
@@ -224,11 +362,9 @@
       return '';
     }
 
-    function updateTimestamp() {
-      document.getElementById('lastUpdate').textContent =
-        'Last updated: ' + new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    }
-
+    /* ─────────────────────────────────────────────────────
+       Incident search
+    ───────────────────────────────────────────────────── */
     document.getElementById('searchBox').addEventListener('input', function(e) {
       var term = e.target.value.toLowerCase();
       document.querySelectorAll('#incidentTable tbody tr').forEach(function(row) {
@@ -236,8 +372,23 @@
       });
     });
 
+    /* ─────────────────────────────────────────────────────
+       Road closure search
+    ───────────────────────────────────────────────────── */
+    document.getElementById('roadSearchBox').addEventListener('input', function(e) {
+      var term = e.target.value.toLowerCase();
+      var tbl  = document.getElementById('roadTable');
+      if (!tbl) return;
+      tbl.querySelectorAll('tbody tr').forEach(function(row) {
+        row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
+      });
+    });
+
+    /* ─────────────────────────────────────────────────────
+       Load incidents
+    ───────────────────────────────────────────────────── */
     function loadIncidents() {
-      fetch(BASE + '/0/query?' + new URLSearchParams({
+      fetch(INCIDENT_BASE + '/0/query?' + new URLSearchParams({
         where: '1=1',
         outFields: 'Incident_Name,Incident_Type,Status,Start_Date,Location_Description,Size_Acres,Contact_Info,Last_Updated,Evacuations,Road_Closures,RC_Details',
         orderByFields: 'Status,Last_Updated DESC',
@@ -252,9 +403,10 @@
         if (!features.length) {
           tbody.innerHTML = '<tr><td colspan="8">No incidents found.</td></tr>';
           document.getElementById('activeCount').textContent = 'Active incidents: 0';
-          updateTimestamp();
+          document.getElementById('lastUpdate').textContent  = 'Last updated: ' + now();
           return;
         }
+
         var order = { active: 1, contained: 2, closed: 3 };
         features.sort(function(a, b) {
           var as = (a.attributes.Status || '').toLowerCase();
@@ -297,18 +449,21 @@
           tbody.appendChild(tr);
         });
 
-        updateTimestamp();
+        document.getElementById('lastUpdate').textContent = 'Last updated: ' + now();
       })
       .catch(function() {
         document.querySelector('#incidentTable tbody').innerHTML =
           '<tr><td colspan="8">Error loading incident data.</td></tr>';
         document.getElementById('activeCount').textContent = 'Active incidents: Error loading';
-        updateTimestamp();
+        document.getElementById('lastUpdate').textContent  = 'Last updated: ' + now();
       });
     }
 
+    /* ─────────────────────────────────────────────────────
+       Load evacuations
+    ───────────────────────────────────────────────────── */
     function loadEvacuations() {
-      fetch(BASE + '/1/query?' + new URLSearchParams({
+      fetch(INCIDENT_BASE + '/1/query?' + new URLSearchParams({
         where: '1=1',
         outFields: 'Zone_Level,Status,Affected_Area,Public_Message,Effective_Date',
         orderByFields: 'Effective_Date DESC',
@@ -340,9 +495,7 @@
             '<div class="evac-level" style="color:' + color + ';">' + (a.Zone_Level || '') + '</div>' +
             '<div class="evac-area">' + (a.Affected_Area || '') + '</div>' +
             (a.Public_Message ? '<div class="evac-message">' + a.Public_Message + '</div>' : '') +
-            '<div class="evac-meta">Effective: ' + formatDate(a.Effective_Date) +
-              (a.Last_Updated ? ' &nbsp;|&nbsp; Updated: ' + formatDate(a.Last_Updated) : '') +
-            '</div></div>';
+            '<div class="evac-meta">Effective: ' + formatDate(a.Effective_Date) + '</div></div>';
         }).join('');
       })
       .catch(function() {
@@ -352,9 +505,111 @@
       });
     }
 
+    /* ─────────────────────────────────────────────────────
+       Load road closures  (RoadBlock layer — index 0)
+    ───────────────────────────────────────────────────── */
+    function loadRoadClosures() {
+      fetch(ROAD_BASE + '/0/query?' + new URLSearchParams({
+        where: '1=1',
+        outFields: 'BLOCKNM,LOCDESC,BLOCKTYPE,COMMENT,FULLCLOSE,DIRECTION,BLOCKOCCUR,ACTIVE,ALTROUTE,STARTDATE,ENDDATE,CONTACT,INCIDENTNM,LASTUPDATE',
+        orderByFields: 'ACTIVE DESC, STARTDATE DESC',
+        f: 'json'
+      }))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var container = document.getElementById('roadContent');
+        var features  = data.features || [];
+
+        document.getElementById('roadLastUpdate').textContent = 'Last updated: ' + now();
+
+        if (!features.length) {
+          document.getElementById('roadCount').textContent = 'Active closures: 0';
+          container.className = '';
+          container.innerHTML = '<div class="road-none"><span>&#10003;</span> No road closures currently on record.</div>';
+          return;
+        }
+
+        /* Sort: active first, then by start date descending */
+        features.sort(function(a, b) {
+          var aa = (a.attributes.ACTIVE || '').toLowerCase() === 'yes' ? 0 : 1;
+          var bb = (b.attributes.ACTIVE || '').toLowerCase() === 'yes' ? 0 : 1;
+          if (aa !== bb) return aa - bb;
+          return (b.attributes.STARTDATE || 0) - (a.attributes.STARTDATE || 0);
+        });
+
+        var activeCount = features.filter(function(f) {
+          return (f.attributes.ACTIVE || '').toLowerCase() === 'yes';
+        }).length;
+        document.getElementById('roadCount').textContent = 'Active closures: ' + activeCount;
+
+        var rows = features.map(function(f) {
+          var a        = f.attributes;
+          var isActive = (a.ACTIVE || '').toLowerCase() === 'yes';
+          var isFull   = (a.FULLCLOSE || '').toLowerCase() === 'yes';
+          var rowCls   = isActive ? 'road-active-row' : 'road-closed-row';
+
+          var nameCell = '<strong>' + (a.BLOCKNM || 'Unnamed') + '</strong>';
+          if (isFull) nameCell += '<br><span class="road-full-tag">FULL CLOSURE</span>';
+          if (a.INCIDENTNM) nameCell += '<div style="font-size:0.75em;color:#fca5a5;margin-top:2px;">Incident: ' + a.INCIDENTNM + '</div>';
+
+          var altCell = a.ALTROUTE ? a.ALTROUTE : '<span style="color:rgba(255,255,255,0.35);">None</span>';
+
+          return '<tr class="' + rowCls + '">' +
+            '<td>' + nameCell + '</td>' +
+            '<td>' + fld(a.LOCDESC) + (a.DIRECTION ? '<div style="font-size:0.78em;color:rgba(255,255,255,0.55);">' + a.DIRECTION + '</div>' : '') + '</td>' +
+            '<td>' + fld(a.BLOCKTYPE) + '</td>' +
+            '<td><span class="road-badge ' + (isActive ? 'road-badge-active' : 'road-badge-inactive') + '">' + (a.ACTIVE || 'N/A') + '</span><br>' +
+              '<span style="font-size:0.75em;color:rgba(255,255,255,0.55);">' + fld(a.BLOCKOCCUR) + '</span></td>' +
+            '<td style="white-space:nowrap;">' + formatDate(a.STARTDATE) + '<br>' +
+              '<span style="font-size:0.78em;color:rgba(255,255,255,0.55);">– ' + formatDate(a.ENDDATE) + '</span></td>' +
+            '<td>' + altCell + '</td>' +
+            '<td>' + fld(a.CONTACT) + '</td>' +
+            '<td style="font-size:0.78em;white-space:nowrap;">' + formatDate(a.LASTUPDATE) + '</td>' +
+            '</tr>';
+        }).join('');
+
+        container.className = '';
+        container.innerHTML =
+          '<div class="road-table-wrapper">' +
+            '<table id="roadTable">' +
+              '<thead><tr>' +
+                '<th>Road Block</th>' +
+                '<th>Location</th>' +
+                '<th>Reason</th>' +
+                '<th>Status / Duration</th>' +
+                '<th>Start – End</th>' +
+                '<th>Alternate Route</th>' +
+                '<th>Contact</th>' +
+                '<th>Updated</th>' +
+              '</tr></thead>' +
+              '<tbody>' + rows + '</tbody>' +
+            '</table>' +
+          '</div>';
+
+        /* Re-wire search after DOM rebuild */
+        document.getElementById('roadSearchBox').dispatchEvent(new Event('input'));
+      })
+      .catch(function() {
+        var container = document.getElementById('roadContent');
+        container.className = 'road-error';
+        container.textContent = 'Error loading road closure data. Please refresh the page.';
+        document.getElementById('roadCount').textContent       = 'Active closures: Error loading';
+        document.getElementById('roadLastUpdate').textContent  = 'Last updated: ' + now();
+      });
+    }
+
+    /* ─────────────────────────────────────────────────────
+       Boot + auto-refresh every 5 min
+    ───────────────────────────────────────────────────── */
     loadIncidents();
     loadEvacuations();
-    setInterval(function() { loadIncidents(); loadEvacuations(); }, 300000);
+    loadRoadClosures();
+
+    setInterval(function() {
+      loadIncidents();
+      loadEvacuations();
+      loadRoadClosures();
+    }, 300000);
   </script>
 
 </body>
