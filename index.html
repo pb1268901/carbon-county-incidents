@@ -241,8 +241,8 @@
       #incidentTable th:nth-child(4), #incidentTable td:nth-child(4),
       #incidentTable th:nth-child(6), #incidentTable td:nth-child(6) { display: none; }
       /* road table: hide end date + contact on mobile */
-      #roadTable th:nth-child(5), #roadTable td:nth-child(5),
-      #roadTable th:nth-child(7), #roadTable td:nth-child(7) { display: none; }
+      #roadTable th:nth-child(4), #roadTable td:nth-child(4),
+      #roadTable th:nth-child(6), #roadTable td:nth-child(6) { display: none; }
       table { font-size: 0.8em; }
     }
   </style>
@@ -318,7 +318,6 @@
       <strong>Status:</strong>
       <span class="road-badge road-badge-active">Active</span>
       <span class="road-badge road-badge-inactive">Inactive</span>
-      &nbsp;|&nbsp; <strong>FULL CLOSURE</strong> tag indicates road is completely blocked.
     </div>
 
     <div id="roadContent" class="road-loading">Loading road closure data...</div>
@@ -561,9 +560,7 @@
           return '<tr class="' + rowCls + '">' +
             '<td>' + nameCell + '</td>' +
             '<td>' + fld(a.LOCDESC) + (a.DIRECTION ? '<div style="font-size:0.78em;color:rgba(255,255,255,0.55);">' + a.DIRECTION + '</div>' : '') + '</td>' +
-            '<td>' + fld(a.BLOCKTYPE) + '</td>' +
-            '<td><span class="road-badge ' + (isActive ? 'road-badge-active' : 'road-badge-inactive') + '">' + (a.ACTIVE || 'N/A') + '</span><br>' +
-              '<span style="font-size:0.75em;color:rgba(255,255,255,0.55);">' + fld(a.BLOCKOCCUR) + '</span></td>' +
+            '<td><span class="road-badge ' + (isActive ? 'road-badge-active' : 'road-badge-inactive') + '">' + (a.ACTIVE || 'N/A') + '</span></td>' +
             '<td style="white-space:nowrap;">' + formatDate(a.STARTDATE) + '<br>' +
               '<span style="font-size:0.78em;color:rgba(255,255,255,0.55);">– ' + formatDate(a.ENDDATE) + '</span></td>' +
             '<td>' + altCell + '</td>' +
@@ -579,8 +576,7 @@
               '<thead><tr>' +
                 '<th>Road Block</th>' +
                 '<th>Location</th>' +
-                '<th>Reason</th>' +
-                '<th>Status / Duration</th>' +
+                '<th>Active?</th>' +
                 '<th>Start – End</th>' +
                 '<th>Alternate Route</th>' +
                 '<th>Contact</th>' +
