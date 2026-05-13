@@ -332,7 +332,12 @@
     var ROAD_BASE     = 'https://services1.arcgis.com/lo6DwqkHoBfbpsNX/arcgis/rest/services/Road_Closures/FeatureServer';
 
     function fld(v) { return (v !== null && v !== undefined && v !== '') ? v : 'N/A'; }
-
+  
+    function isActiveVal(v) {
+      if (v === null || v === undefined || v === '') return false;
+      if (typeof v === 'number') return v === 1;
+      return v.toString().toLowerCase() === 'yes';
+    }
     function formatDate(v) {
       if (!v) return 'N/A';
       var d = new Date(v);
@@ -531,20 +536,20 @@
 
         /* Sort: active first, then by start date descending */
         features.sort(function(a, b) {
-          var aa = (a.attributes.ACTIVE || '').toLowerCase() === 'yes' ? 0 : 1;
-          var bb = (b.attributes.ACTIVE || '').toLowerCase() === 'yes' ? 0 : 1;
+          var aa = isActiveVal(a.attributes.ACTIVE) ? 0 : 1;
+          var bb = isActiveVal(b.attributes.ACTIVE) ? 0 : 1;
           if (aa !== bb) return aa - bb;
           return (b.attributes.STARTDATE || 0) - (a.attributes.STARTDATE || 0);
         });
 
         var activeCount = features.filter(function(f) {
-          return (f.attributes.ACTIVE || '').toLowerCase() === 'yes';
+          return isActiveVal(f.attributes.ACTIVE);
         }).length;
         document.getElementById('roadCount').textContent = 'Active closures: ' + activeCount;
 
         var rows = features.map(function(f) {
           var a        = f.attributes;
-          var isActive = (a.ACTIVE || '').toLowerCase() === 'yes';
+          var isActive = isActiveVal(a.ACTIVE);
           var isFull   = (a.FULLCLOSE || '').toLowerCase() === 'yes';
           var rowCls   = isActive ? 'road-active-row' : 'road-closed-row';
 
