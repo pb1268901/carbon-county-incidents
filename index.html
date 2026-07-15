@@ -237,9 +237,8 @@
 
     @media (max-width: 650px) {
       body { padding: 10px; }
-      /* incident table: hide acres + contact on mobile */
-            #incidentTable th:nth-child(6), #incidentTable td:nth-child(6),
-            #incidentTable th:nth-child(7), #incidentTable td:nth-child(7) { display: none; }
+      /* incident table: hide acres on mobile */
+            #incidentTable th:nth-child(6), #incidentTable td:nth-child(6) { display: none; }
       /* road table: hide end date + contact on mobile */
       #roadTable th:nth-child(4), #roadTable td:nth-child(4),
       #roadTable th:nth-child(6), #roadTable td:nth-child(6) { display: none; }
@@ -289,12 +288,11 @@
             <th>Start Date</th>
             <th>Location</th>
             <th>Acres</th>
-            <th>Contact</th>
             <th>Updated</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td colspan="8">Loading incident data...</td></tr>
+          <tr><td colspan="7">Loading incident data...</td></tr>
         </tbody>
       </table>
     </div>
@@ -393,7 +391,7 @@
     function loadIncidents() {
       fetch(INCIDENT_BASE + '/0/query?' + new URLSearchParams({
         where: '1=1',
-        outFields: 'Incident_Name,Incident_Type,Status,Start_Date,Location_Description,Size_Acres,Contact_Info,Last_Updated,Evacuations,Road_Closures,RC_Details',
+        outFields: 'Incident_Name,Incident_Type,Status,Start_Date,Location_Description,Size_Acres,Last_Updated,Evacuations,Road_Closures,RC_Details',
         orderByFields: 'Status,Last_Updated DESC',
         f: 'json'
       }))
@@ -404,7 +402,7 @@
         tbody.innerHTML = '';
 
         if (!features.length) {
-          tbody.innerHTML = '<tr><td colspan="8">No incidents found.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7">No incidents found.</td></tr>';
           document.getElementById('activeCount').textContent = 'Active incidents: 0';
           document.getElementById('lastUpdate').textContent  = 'Last updated: ' + now();
           return;
@@ -446,7 +444,6 @@
             '<td>' + formatDate(a.Start_Date) + '</td>' +
             '<td>' + fld(a.Location_Description) + '</td>' +
             '<td>' + (a.Size_Acres ? parseFloat(a.Size_Acres).toLocaleString() + ' ac' : 'N/A') + '</td>' +
-            '<td>' + fld(a.Contact_Info) + '</td>' +
             '<td style="white-space:nowrap;">' + formatDate(a.Last_Updated) + '</td>';
 
           tbody.appendChild(tr);
@@ -456,7 +453,7 @@
       })
       .catch(function() {
         document.querySelector('#incidentTable tbody').innerHTML =
-          '<tr><td colspan="8">Error loading incident data.</td></tr>';
+          '<tr><td colspan="7">Error loading incident data.</td></tr>';
         document.getElementById('activeCount').textContent = 'Active incidents: Error loading';
         document.getElementById('lastUpdate').textContent  = 'Last updated: ' + now();
       });
